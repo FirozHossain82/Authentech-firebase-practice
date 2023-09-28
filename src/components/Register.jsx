@@ -1,7 +1,51 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthProviders.jsx";
+import { toast } from "react-toastify";
 
 const Register = () => {
+  const { registerUser } = useContext(AuthContext);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleRegister = (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    const form = event.target;
+    const name = form.name.value;
+    const email = form.name.value;
+    const password = form.password.value;
+    console.log(name, email, password);
+    //Validation
+    if (!/(?=.*[A-Z])/.test(password)) {
+      setError("Please at least one uppercase  letter");
+      return;
+    } else if (!/(?=.*[!@#$&*])/.test(password)) {
+      setError("Please add one special letter");
+      return;
+    } else if (!/(?=.*[0-9].*[0-9])/.test(password)) {
+      setError("Please add at lease two number");
+      return;
+    } else if (password.length < 6) {
+      setError("Please add at least 6 character");
+      return;
+    }
+    registerUser(email, password)
+      .then((result) => {
+        const createdUser = result.user;
+        console.log(createdUser);
+        form.reset();
+        setError("");
+        toast.success("user has been created successfully");
+      })
+      .catch((error) => {
+        console.log(error.message);
+        toast.error(error.message);
+      });
+  };
+
   return (
     <div className="flex justify-center items-center pt-8   ">
       <div className="flex flex-col max-w-md p-6 shadow-md rounded-md sm:p-10 bg-gray-100 text-gray-900">
@@ -10,6 +54,7 @@ const Register = () => {
           <p className="text-sm text-gray-400">Create a new account</p>
         </div>
         <form
+          onSubmit={handleRegister}
           noValidate=""
           action=""
           className="space-y-12 ng-untouched ng-pristine ng-valid"
@@ -52,8 +97,13 @@ const Register = () => {
                 name="password"
                 id="password"
                 placeholder="*******"
+                required
                 className="w-full px-3 py-2 border rounded-md border-gray-300 bg-gray-200 focus:border-gray-900 text-gray-900"
               />
+            </div>
+            <div className=" mt-3 mb-0">
+              <p className=" font-medium  text-red-500">{error}</p>
+              <p className="font-medium  text-green-500">{success}</p>
             </div>
           </div>
           <div className="space-y-2">

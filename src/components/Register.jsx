@@ -1,10 +1,14 @@
 import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
-import { AuthContext } from "../contexts/AuthProviders.jsx";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AuthContext } from "../contexts/AuthProviders.jsx";
 
 const Register = () => {
-  const { registerUser } = useContext(AuthContext);
+  const { createUser, updateName, verifyEmail, signInWithGoogle} =
+    useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -15,9 +19,10 @@ const Register = () => {
 
     const form = event.target;
     const name = form.name.value;
-    const email = form.name.value;
+    const email = form.email.value;
     const password = form.password.value;
     console.log(name, email, password);
+
     //Validation
     if (!/(?=.*[A-Z])/.test(password)) {
       setError("Please at least one uppercase  letter");
@@ -25,26 +30,54 @@ const Register = () => {
     } else if (!/(?=.*[!@#$&*])/.test(password)) {
       setError("Please add one special letter");
       return;
-    } else if (!/(?=.*[0-9].*[0-9])/.test(password)) {
-      setError("Please add at lease two number");
-      return;
     } else if (password.length < 6) {
       setError("Please add at least 6 character");
       return;
     }
-    registerUser(email, password)
+    createUser(email, password)
       .then((result) => {
         const createdUser = result.user;
         console.log(createdUser);
         form.reset();
         setError("");
         toast.success("user has been created successfully");
+        // update Name
+        updateName(name)
+          .then(() => {
+            toast.success("User Name Updated");
+            // email verification
+            verifyEmail(user)
+              .then((result) => {
+                console.log(result);
+                toast.success("Please Check your email for Verification Link");
+                navigate(from, { replace: true });
+              })
+              .catch((error) => {
+                toast.error(error.message);
+              });
+          })
+          .catch((error) => {
+            toast.error(error.message);
+          });
       })
       .catch((error) => {
         console.log(error.message);
-        toast.error(error.message);
+        toast.warning(error.message);
       });
   };
+
+  // Google SignIn
+ const handleGoogleSignIn = () =>{
+  signInWithGoogle()
+  .then((result) => {
+    const loggedUser = result.user;
+    console.log(loggedUser)
+    navigate(from,  { replace: true });
+  })
+  .catch((error) =>{
+    toast.warning(error.message);
+  })
+ }
 
   return (
     <div className="flex justify-center items-center pt-8   ">
@@ -55,8 +88,8 @@ const Register = () => {
         </div>
         <form
           onSubmit={handleRegister}
-          noValidate=""
-          action=""
+          // noValidate=""
+          // action=""
           className="space-y-12 ng-untouched ng-pristine ng-valid"
         >
           <div className="space-y-4">
@@ -70,7 +103,7 @@ const Register = () => {
                 id="name"
                 placeholder="Enter Your Name Here"
                 className="w-full px-3 py-2 border rounded-md border-gray-300 focus:border-gray-900 bg-gray-200 text-gray-900"
-                data-temp-mail-org="0"
+                // data-temp-mail-org="0"
               />
             </div>
             <div>
@@ -81,9 +114,10 @@ const Register = () => {
                 type="email"
                 name="email"
                 id="email"
+                required
                 placeholder="Enter Your Email Here"
                 className="w-full px-3 py-2 border rounded-md border-gray-300 focus:border-gray-900 bg-gray-200 text-gray-900"
-                data-temp-mail-org="0"
+                // data-temp-mail-org="0"
               />
             </div>
             <div>
@@ -125,7 +159,7 @@ const Register = () => {
           <div className="flex-1 h-px sm:w-16 dark:bg-gray-700"></div>
         </div>
         <div className="flex justify-center space-x-4">
-          <button aria-label="Log in with Google" className="p-3 rounded-sm">
+          <button onClick={handleGoogleSignIn} aria-label="Log in with Google" className="p-3 rounded-sm">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 32 32"

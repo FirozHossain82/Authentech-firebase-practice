@@ -5,11 +5,13 @@ import Login from "../components/Login.jsx";
 import Register from "../components/Register.jsx";
 import Profile from "../components/Profile.jsx";
 import Wallet from "../components/Wallet.jsx";
+import ErrorPage from "../components/ErrorPage.jsx";
 
 const router = createBrowserRouter([
     {
         path:'/',
         element:<Main></Main>,
+        errorElement:<ErrorPage></ErrorPage>,
         children:[
             {
                 path:'/',
